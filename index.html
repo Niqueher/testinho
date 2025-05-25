@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulador SEIRD-M</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>Simulador SEIRD-M</h1>
+
+    <div>
+        <label>População Total: <input id="N" type="number" value="200000"></label><br>
+        <label>Taxa de Transmissão (β): <input id="beta" type="number" step="0.001" value="0.5"></label><br>
+        <label>Taxa de Quarentena (α): <input id="alfa" type="number" step="0.001" value="0.1"></label><br>
+        <label>Tempo de Incubação em Dias (σ): <input id="sigma" type="number" step="0.1" value="5"></label><br>
+        <label>Tempo de Recuperação em Dias (γ): <input id="gamma" type="number" step="0.1" value="10"></label><br>
+        <label>Tempo de Recuperação em Quarentena (γq): <input id="gammaq" type="number" step="0.1" value="14"></label><br>
+        <label>Taxa de Letalidade (μ): <input id="mu" type="number" step="0.001" value="0.01"></label><br>
+        <label>Taxa de Letalidade em Quarentena (μq): <input id="muq" type="number" step="0.001" value="0.005"></label><br>
+        <label>Tempo Máximo (dias): <input id="days" type="number" value="180"></label><br>
+        <button onclick="simular()">Simular</button>
+    </div>
+
+    <div id="plot"></div>
+
+    <script>
+        function seirdm(y, beta, sigma, alfa, gamma, gammaq, mu, muq, N) {
+            const [S, E, I, Q, R, D] = y;
+            const dSdt = -beta * S * I / N;
+            const dEdt = beta * S * I / N - sigma * E;
+            const dIdt = sigma * E - gamma * I - mu * I - alfa * I;
+            const dQdt = alfa * I - (gammaq + muq) * Q;
+            const dRdt = gamma * I + gammaq * Q;
+            const dDdt = mu * I + muq * Q;
+            return [dSdt, dEdt, dIdt, dQdt, dRdt, dDdt];
+        }
+
+        function simular() {
+            const N = parseFloat(document.getElementById("N").value);
+            const beta = parseFloat(document.getElementById("beta").value);
+            const alfa = parseFloat(document.getElementById("alfa").value);
+            const sigma = 1 / parseFloat(document.getElementById("sigma").value);
+            const gamma = 1 / parseFloat(document.getElementById("gamma").value);
+            const gammaq = 1 / parseFloat(document.getElementById("gammaq").value);
+            const mu = parseFloat(document.getElementById("mu").value);
+            const muq = parseFloat(document.getElementById("muq").value);
+            const days = parseInt(document.getElementById("days").value);
+
+            let t = [...Array(days).keys()];
+            let S = [], E = [], I = [], Q = [], R = [], D = [];
+
+            let y = [N - 1, 0, 1, 0, 0, 0];
+            for (let i = 0; i < days; i++) {
+                S.push(y[0]); E.push(y[1]); I.push(y[2]); Q.push(y[3]); R.push(y[4]); D.push(y[5]);
+                let dydt = seirdm(y, beta, sigma, alfa, gamma, gammaq, mu, muq, N);
+                y = y.map((val, idx) => val + dydt[idx]);
+            }
+
+            const data = [
+                { x: t, y: S, name: 'Suscetíveis', type: 'scatter' },
+                { x: t, y: E, name: 'Expostos', type: 'scatter' },
+                { x: t, y: I, name: 'Infectados', type: 'scatter' },
+                { x: t, y: Q, name: 'Quarentena', type: 'scatter' },
+                { x: t, y: R, name: 'Recuperados', type: 'scatter' },
+                { x: t, y: D, name: 'Mortos', type: 'scatter' }
+            ];
+
+            Plotly.newPlot('plot', data, {
+                title: 'Dinâmica da Doença',
+                xaxis: { title: 'Dias' },
+                yaxis: { title: 'Número de Pessoas' }
+            });
+        }
+    </script>
+</body>
+</html>
