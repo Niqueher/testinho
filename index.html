@@ -56,6 +56,7 @@
             border-radius: 6px;
             cursor: pointer;
             transition: background 0.3s;
+            margin-bottom: 1rem;
         }
 
         button:hover {
@@ -64,6 +65,14 @@
 
         #plot {
             margin-top: 2rem;
+        }
+
+        #download-btn {
+            background: #28a745;
+        }
+
+        #download-btn:hover {
+            background: #1e7e34;
         }
     </style>
 </head>
@@ -82,6 +91,7 @@
         <button onclick="simular()">Simular</button>
 
         <div id="plot"></div>
+        <button id="download-btn" style="display:none;" onclick="baixarGrafico()">⬇️ Baixar Gráfico PNG</button>
     </div>
 
     <script>
@@ -130,8 +140,22 @@
                 title: 'Dinâmica da Doença',
                 xaxis: { title: 'Dias' },
                 yaxis: { title: 'Número de Pessoas' },
-                legend: { orientation: 'h' }
+                legend: {
+                    orientation: 'v',
+                    x: -0.2,
+                    y: 1,
+                    xanchor: 'left',
+                    yanchor: 'top'
+                }
             });
+
+
+            // Exibe o botão de download após plotar
+            document.getElementById("download-btn").style.display = "block";
+        }
+
+        function baixarGrafico() {
+            Plotly.downloadImage('plot', {format: 'png', filename: 'seirdm_simulacao', height: 600, width: 900});
         }
     </script>
 </body>
