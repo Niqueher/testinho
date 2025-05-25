@@ -5,6 +5,7 @@
   <title>Simulador SEIRD-M</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.min.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -71,6 +72,15 @@
       max-width: 100%;
     }
 
+    #btn-download-gif {
+      display: none;
+      background-color: #1e88e5;
+    }
+
+    #btn-download-gif:hover {
+      background-color: #1565c0;
+    }
+
     @media (min-width: 600px) {
       .form-grid {
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -79,6 +89,10 @@
       .button-group {
         flex-direction: row;
         justify-content: center;
+      }
+
+      button {
+        max-width: 200px;
       }
     }
   </style>
@@ -114,16 +128,22 @@
     <label>Tempo Máximo (dias)
       <input id="days" type="number" value="180" />
     </label>
+    <label>FPS do GIF
+      <input id="fps" type="number" value="10" min="1" max="60" />
+    </label>
   </div>
 
   <div class="button-group">
     <button onclick="simular()">Simular</button>
     <button onclick="baixarPNG()">📸 Baixar PNG</button>
+    <button id="btn-download-gif" onclick="baixarGIF()">🎞️ Baixar GIF</button>
   </div>
 
   <div id="plot"></div>
 
   <script>
+    let gifBlobURL = null;
+
     function seirdm(y, beta, sigma, alfa, gamma, gammaq, mu, muq, N) {
       const [S, E, I, Q, R, D] = y;
       const dSdt = -beta * S * I / N;
@@ -145,6 +165,7 @@
       const mu = parseFloat(document.getElementById("mu").value);
       const muq = parseFloat(document.getElementById("muq").value);
       const days = parseInt(document.getElementById("days").value);
+      const fps = parseInt(document.getElementById("fps").value);
 
       let t = [...Array(days).keys()];
       let S = [], E = [], I = [], Q = [], R = [], D = [];
@@ -179,7 +200,65 @@
         },
         margin: { b: 100 },
         responsive: true
+      }).then(() => {
+        gerarGIF(data, t, fps);
       });
+    }
+
+    function gerarGIF(data, t, fps) {
+      const totalFrames = t.length;
+      const canvas = document.createElement("canvas");
+      const width = 600;
+      const height = 400;
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js',
+        width: width,
+        height: height,
+        transparent: 0x00FFFFFF,
+        repeat: 0,
+        fps: fps
+      });
+
+      let frameInterval = Math.max(1, Math.floor(totalFrames / 30)); // no more than 30 frames
+
+      function renderFrame(i) {
+        ctx.clearRect(0, 0, width, height);
+        const subData = data.map(trace => ({
+          x: trace.x.slice(0, i + 1),
+          y: trace.y.slice(0, i + 1),
+          name: trace.name,
+          type: trace.type
+        }));
+
+        Plotly.newPlot(canvas, subData, {
+          title: '',
+          xaxis: { title: 'Dias' },
+          yaxis: { title: 'Número de Pessoas' },
+          showlegend: false,
+          margin: { t: 20, b: 40, l: 50, r: 20 }
+        }, { staticPlot: true }).then(() => {
+          gif.addFrame(canvas, { copy: true, delay: 1000 / fps });
+          if (i + frameInterval >= totalFrames) {
+            gif.on('finished', function(blob) {
+              if (gifBlobURL) URL.revokeObjectURL(gifBlobURL); // limpa url antiga
+              gifBlobURL = URL.createObjectURL(blob);
+              document.getElementById('btn-download-gif').style.display = 'inline-block';
+            });
+            gif.render();
+          } else {
+            renderFrame(i + frameInterval);
+          }
+        });
+      }
+
+      document.getElementById('btn-download-gif').style.display = 'none';
+      renderFrame(0);
     }
 
     function baixarPNG() {
@@ -190,6 +269,17 @@
         width: 900,
         scale: 2
       });
+    }
+
+    function baixarGIF() {
+      if (gifBlobURL) {
+        const link = document.createElement('a');
+        link.href = gifBlobURL;
+        link.download = 'simulacao.gif';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     }
   </script>
 </body>
