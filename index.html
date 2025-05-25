@@ -3,25 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <title>Simulador SEIRD-M</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: "Segoe UI", sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background: #f8f9fa;
+            color: #212529;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 4px;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 0.75rem;
+            background: #007bff;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        #plot {
+            margin-top: 2rem;
+        }
+    </style>
 </head>
 <body>
-    <h1>Simulador SEIRD-M</h1>
-
-    <div>
-        <label>População Total: <input id="N" type="number" value="200000"></label><br>
-        <label>Taxa de Transmissão (β): <input id="beta" type="number" step="0.001" value="0.5"></label><br>
-        <label>Taxa de Quarentena (α): <input id="alfa" type="number" step="0.001" value="0.1"></label><br>
-        <label>Tempo de Incubação em Dias (σ): <input id="sigma" type="number" step="0.1" value="5"></label><br>
-        <label>Tempo de Recuperação em Dias (γ): <input id="gamma" type="number" step="0.1" value="10"></label><br>
-        <label>Tempo de Recuperação em Quarentena (γq): <input id="gammaq" type="number" step="0.1" value="14"></label><br>
-        <label>Taxa de Letalidade (μ): <input id="mu" type="number" step="0.001" value="0.01"></label><br>
-        <label>Taxa de Letalidade em Quarentena (μq): <input id="muq" type="number" step="0.001" value="0.005"></label><br>
-        <label>Tempo Máximo (dias): <input id="days" type="number" value="180"></label><br>
+    <div class="container">
+        <h1>Simulador SEIRD-M</h1>
+        <label>População Total: <input id="N" type="number" value="200000"></label>
+        <label>Taxa de Transmissão (β): <input id="beta" type="number" step="0.001" value="0.5"></label>
+        <label>Taxa de Quarentena (α): <input id="alfa" type="number" step="0.001" value="0.1"></label>
+        <label>Tempo de Incubação em Dias (σ): <input id="sigma" type="number" step="0.1" value="5"></label>
+        <label>Tempo de Recuperação em Dias (γ): <input id="gamma" type="number" step="0.1" value="10"></label>
+        <label>Tempo de Recuperação em Quarentena (γq): <input id="gammaq" type="number" step="0.1" value="14"></label>
+        <label>Taxa de Letalidade (μ): <input id="mu" type="number" step="0.001" value="0.01"></label>
+        <label>Taxa de Letalidade em Quarentena (μq): <input id="muq" type="number" step="0.001" value="0.005"></label>
+        <label>Tempo Máximo (dias): <input id="days" type="number" value="180"></label>
         <button onclick="simular()">Simular</button>
-    </div>
 
-    <div id="plot"></div>
+        <div id="plot"></div>
+    </div>
 
     <script>
         function seirdm(y, beta, sigma, alfa, gamma, gammaq, mu, muq, N) {
@@ -68,7 +129,8 @@
             Plotly.newPlot('plot', data, {
                 title: 'Dinâmica da Doença',
                 xaxis: { title: 'Dias' },
-                yaxis: { title: 'Número de Pessoas' }
+                yaxis: { title: 'Número de Pessoas' },
+                legend: { orientation: 'h' }
             });
         }
     </script>
