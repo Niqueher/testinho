@@ -76,6 +76,11 @@
         #gif-result a:hover {
             background-color: #218838;
         }
+
+        /* Canvas invisível */
+        #plot-canvas {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -117,6 +122,9 @@
     <button onclick="simular()">Simular</button>
 
     <div id="plot"></div>
+
+    <!-- Canvas oculto para renderizar GIF -->
+    <div id="plot-canvas" style="width:600px;height:400px;"></div>
 
     <div id="gif-result"></div>
 
@@ -193,16 +201,10 @@
                 fps: fps
             });
 
-            const canvas = document.createElement("canvas");
-            canvas.width = 600;
-            canvas.height = 400;
-            const ctx = canvas.getContext("2d");
-
             const totalFrames = t.length;
             const skip = Math.ceil(totalFrames / 30);
 
             function renderFrame(i) {
-                ctx.clearRect(0, 0, 600, 400);
                 const subData = data.map(trace => ({
                     x: trace.x.slice(0, i + 1),
                     y: trace.y.slice(0, i + 1),
@@ -210,13 +212,15 @@
                     type: trace.type
                 }));
 
-                Plotly.newPlot(canvas, subData, {
+                Plotly.newPlot('plot-canvas', subData, {
                     title: '',
                     xaxis: { title: 'Dias' },
                     yaxis: { title: 'Número de Pessoas' },
                     showlegend: false
                 }, { staticPlot: true }).then(() => {
-                    gif.addFrame(canvas, { copy: true, delay: 1000 / fps });
+                    const canvasEl = document.querySelector('#plot-canvas').querySelector('canvas');
+                    gif.addFrame(canvasEl, { copy: true, delay: 1000 / fps });
+
                     if (i + skip >= totalFrames) {
                         gif.on('finished', function(blob) {
                             const url = URL.createObjectURL(blob);
